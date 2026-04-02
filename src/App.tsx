@@ -51,7 +51,7 @@ export default function App() {
             <h2 className="mb-4 text-sm font-semibold uppercase tracking-widest text-gray-400">
               Status Ribbon
             </h2>
-            <StatusRibbon results={results} interval={config.interval} />
+            <StatusRibbon results={results} events={events} interval={config.interval} />
           </section>
 
           {/* Scenario Editor */}
