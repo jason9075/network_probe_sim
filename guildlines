@@ -1,0 +1,73 @@
+
+# Development Guideline: Network Probe Logic Simulator
+
+## 1. Project Overview
+Build a React-based interactive simulator to test and visualize a network probe's status evaluation logic. The tool does **not** perform actual network requests; instead, it processes a user-defined sequence of simulated events.
+
+## 2. Core Logic Specification
+The agent must implement a pure function `evaluateStatus(window: ResponseEvent[], config: Config)`:
+
+### Data Structures
+* **ResponseEvent**: `{ id: string, type: 'SUCCESS' | 'TIMEOUT', latency: number, timestamp: number }`
+* **Config**: 
+    * `windowSize (M)`: Number of recent responses to consider.
+    * `timeoutThreshold (P%)`: Percentage of timeouts that triggers "Bad" status immediately.
+    * `scoreThresholds`: Ranges for `Good`, `Unstable`, and `Bad` based on calculated Score $S$.
+
+### Evaluation Pipeline (Priority Order)
+1.  **Hard Override (Timeout Check)**: 
+    If $(\text{Count of TIMEOUT} / M) \ge P\%$, status is **Bad**.
+2.  **Scoring ($S$)**: 
+    If the threshold isn't met, calculate $S$ (e.g., Average Latency of the window).
+3.  **Threshold Mapping**:
+    * $S < \text{Threshold}_1 \rightarrow$ **Good**
+    * $\text{Threshold}_1 \le S < \text{Threshold}_2 \rightarrow$ **Unstable**
+    * $S \ge \text{Threshold}_2 \rightarrow$ **Bad**
+
+---
+
+## 3. UI Components & Requirements
+
+### A. Configuration Panel (Sidebar)
+* Inputs for $N$ (Interval), $M$ (Window Size), and $P$ (Timeout %).
+* Adjustable thresholds for Score $S$ (Latency-based).
+
+### B. Scenario Editor (Timeline Management)
+* **Action Bar**: Buttons to `Add Success (Random Latency)`, `Add Success (High Latency)`, and `Add Timeout`.
+* **Bulk Actions**: "Add 5x Timeout" or "Add 10x Success" to simulate sudden drops.
+* **List View**: An editable list of events where users can manually change latency values or toggle types.
+
+### C. Preview Layout (The Visualization)
+* **Status Indicator Ribbon**: A horizontal sequence of "LED lights." 
+    * Each light represents the status at that specific point in time.
+    * Color coding: Green (Good), Yellow (Unstable), Red (Bad).
+* **Logic Trace**: When hovering over a light, show a tooltip explaining *why* that status was chosen (e.g., "Timeout rate 40% >= 30%").
+
+---
+
+## 4. Technical Implementation Stack
+* **Framework**: React (Vite) + TypeScript.
+* **Styling**: Tailwind CSS.
+* **Icons**: Lucide-React.
+* **State Management**: `useState` for the event sequence; `useMemo` for the status calculations to ensure real-time UI updates when parameters change.
+
+---
+
+## 5. Instructions for the Coding Agent
+
+> "Act as a frontend engineer. Create a Network Probe Simulator using React and Tailwind CSS.
+> 1. **Implement the Logic**: Write a robust `evaluateStatus` function that uses a sliding window of size $M$. It must prioritize the $P\%$ timeout rule over the latency score $S$.
+> 2. **Build the Editor**: Create an interface to manage a sequence of mock 'ResponseEvents'. Users should be able to push new events to the end or remove them.
+> 3. **Visualize the Impact**: Generate a 'Status Ribbon' where each event in the sequence is evaluated based on the $M$ events preceding it. If I change the window size $M$ via a slider, all status lights in the ribbon should update instantly.
+> 4. **Edge Cases**: Handle cases where the number of events is less than $M$ (e.g., partial window evaluation).
+> 5. **Mocking**: No `fetch` calls. Use a mock generator for latency (e.g., 20ms-100ms for 'Good', 200ms-500ms for 'Unstable')."
+
+---
+
+### Suggested Layout Structure
+| Configuration (Left) | Event Editor & Preview (Right) |
+| :--- | :--- |
+| **Window Size (M)**: [ 15 ] | **Current Sequence**: [Success][Success][Timeout]... |
+| **Timeout % (P)**: [ 30% ] | **Status Preview**: [●][●][●][●][●] (Lights) |
+| **Latency Thresholds**: | **Trend Chart**: (Latency over time) |
+

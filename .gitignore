@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build output
+dist/
+build/
+
+# Vite cache
+.vite/
+
+# Bun
+bun.lockb
+
+# Environment & secrets
+.env
+.env.local
+.env.*.local
+.credentials.json
+
+# Nix
+.direnv/
+result
+result-*
+
+# Editor
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
