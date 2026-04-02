@@ -1,5 +1,7 @@
 # Network Probe Simulator
 
+**Live demo:** https://jason9075.github.io/network_probe_sim/
+
 An interactive browser-based tool for testing and visualizing network probe status evaluation logic. No real network requests are made — everything is driven by a user-defined sequence of simulated response events.
 
 ## Overview
