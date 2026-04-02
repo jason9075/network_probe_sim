@@ -1,5 +1,13 @@
 import { useCallback, useRef } from 'react';
+import { RotateCcw } from 'lucide-react';
 import type { Config } from '../types';
+
+const DEFAULT_CONFIG: Config = {
+  windowSize: 5,
+  timeoutThreshold: 40,
+  scoreThresholds: { good: 2000, bad: 3000 },
+  interval: 5,
+};
 
 interface Props {
   config: Config;
@@ -161,7 +169,17 @@ export function ConfigPanel({ config, onChange }: Props) {
 
   return (
     <aside className="flex w-64 shrink-0 flex-col gap-6 rounded-xl bg-gray-800 p-5">
-      <h2 className="text-lg font-semibold text-white">Configuration</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-white">Configuration</h2>
+        <button
+          onClick={() => onChange(DEFAULT_CONFIG)}
+          title="Reset to defaults"
+          className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs text-gray-400 transition-colors hover:bg-gray-700 hover:text-gray-200"
+        >
+          <RotateCcw size={12} />
+          Reset
+        </button>
+      </div>
 
       <section className="flex flex-col gap-4">
         <h3 className="text-xs font-semibold uppercase tracking-widest text-gray-400">
