@@ -45,9 +45,8 @@ function Tooltip({ result, index, timeSeconds }: TooltipProps) {
       <p className="mb-2 text-xs leading-relaxed text-gray-300">{result.reason}</p>
       <div className="space-y-0.5 font-mono text-xs text-gray-500">
         <div>window {result.windowEvents.length} events</div>
-        <div>
-          timeout {result.timeoutCount} ({result.timeoutRate.toFixed(1)}%)
-        </div>
+        <div>timeout {result.timeoutCount} · disconnect {result.disconnectCount}</div>
+        <div>failure rate {result.failureRate.toFixed(1)}%</div>
         {result.score !== null && <div>avg {result.score.toFixed(0)} ms</div>}
       </div>
     </div>

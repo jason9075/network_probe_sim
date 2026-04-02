@@ -7,9 +7,9 @@ import { ScenarioEditor } from './components/ScenarioEditor';
 import { StatusRibbon } from './components/StatusRibbon';
 
 const DEFAULT_CONFIG: Config = {
-  windowSize: 15,
+  windowSize: 10,
   timeoutThreshold: 30,
-  scoreThresholds: { good: 120, bad: 300 },
+  scoreThresholds: { good: 2000, bad: 3000 },
   interval: 5,
 };
 
@@ -59,7 +59,7 @@ export default function App() {
             <h2 className="mb-4 text-sm font-semibold uppercase tracking-widest text-gray-400">
               Scenario Editor
             </h2>
-            <ScenarioEditor events={events} onChange={setEvents} />
+            <ScenarioEditor events={events} onChange={setEvents} thresholds={config.scoreThresholds} />
           </section>
         </main>
       </div>

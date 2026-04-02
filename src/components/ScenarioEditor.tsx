@@ -1,10 +1,11 @@
-import { CheckCircle, Clock, Trash2, Zap } from 'lucide-react';
-import type { ResponseEvent } from '../types';
-import { makeBulk, makeSuccess, makeTimeout } from '../mock';
+import { CheckCircle, Clock, Trash2, WifiOff, Zap } from 'lucide-react';
+import type { ResponseEvent, ScoreThresholds } from '../types';
+import { makeBulk, makeDisconnect, makeSuccess, makeTimeout } from '../mock';
 
 interface Props {
   events: ResponseEvent[];
   onChange: (events: ResponseEvent[]) => void;
+  thresholds: ScoreThresholds;
 }
 
 interface ActionButtonProps {
@@ -39,30 +40,33 @@ function EventRow({
   onTypeToggle: (id: string) => void;
   onRemove: (id: string) => void;
 }) {
-  const isTimeout = event.type === 'TIMEOUT';
+  const { type } = event;
+
+  const rowBg =
+    type === 'TIMEOUT' ? 'bg-red-950/40' :
+    type === 'DISCONNECT' ? 'bg-orange-950/40' :
+    'bg-gray-800/60';
+
+  const badgeCls =
+    type === 'TIMEOUT' ? 'bg-red-900/60 text-red-300 hover:bg-red-800/60' :
+    type === 'DISCONNECT' ? 'bg-orange-900/60 text-orange-300 hover:bg-orange-800/60' :
+    'bg-green-900/60 text-green-300 hover:bg-green-800/60';
+
+  const badgeIcon =
+    type === 'TIMEOUT' ? <Clock size={11} /> :
+    type === 'DISCONNECT' ? <WifiOff size={11} /> :
+    <CheckCircle size={11} />;
 
   return (
-    <div
-      className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
-        isTimeout ? 'bg-red-950/40' : 'bg-gray-750 bg-gray-800/60'
-      }`}
-    >
+    <div className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${rowBg}`}>
       <span className="w-6 shrink-0 text-right text-xs text-gray-500">{index + 1}</span>
 
       <button
         onClick={() => onTypeToggle(event.id)}
-        className={`flex w-24 shrink-0 items-center gap-1 rounded px-2 py-0.5 text-xs font-medium transition-colors ${
-          isTimeout
-            ? 'bg-red-900/60 text-red-300 hover:bg-red-800/60'
-            : 'bg-green-900/60 text-green-300 hover:bg-green-800/60'
-        }`}
+        className={`flex w-28 shrink-0 items-center gap-1 rounded px-2 py-0.5 text-xs font-medium transition-colors ${badgeCls}`}
       >
-        {isTimeout ? (
-          <Clock size={11} />
-        ) : (
-          <CheckCircle size={11} />
-        )}
-        {event.type}
+        {badgeIcon}
+        {type}
       </button>
 
       <div className="flex flex-1 items-center gap-2">
@@ -87,7 +91,7 @@ function EventRow({
   );
 }
 
-export function ScenarioEditor({ events, onChange }: Props) {
+export function ScenarioEditor({ events, onChange, thresholds }: Props) {
   const append = (newEvents: ResponseEvent[]) => onChange([...events, ...newEvents]);
 
   const remove = (id: string) => onChange(events.filter((e) => e.id !== id));
@@ -97,9 +101,14 @@ export function ScenarioEditor({ events, onChange }: Props) {
 
   const toggleType = (id: string) =>
     onChange(
-      events.map((e) =>
-        e.id === id ? { ...e, type: e.type === 'SUCCESS' ? 'TIMEOUT' : 'SUCCESS' } : e,
-      ),
+      events.map((e) => {
+        if (e.id !== id) return e;
+        const next =
+          e.type === 'SUCCESS' ? 'TIMEOUT' :
+          e.type === 'TIMEOUT' ? 'DISCONNECT' :
+          'SUCCESS';
+        return { ...e, type: next };
+      }),
     );
 
   return (
@@ -107,16 +116,22 @@ export function ScenarioEditor({ events, onChange }: Props) {
       {/* Action bar */}
       <div className="flex flex-wrap gap-2">
         <ActionButton
-          onClick={() => append([makeSuccess(false)])}
+          onClick={() => append([makeSuccess('good', thresholds)])}
           icon={<CheckCircle size={14} />}
           label="Success (Low)"
           className="bg-green-900/60 text-green-300 hover:bg-green-800/60"
         />
         <ActionButton
-          onClick={() => append([makeSuccess(true)])}
+          onClick={() => append([makeSuccess('unstable', thresholds)])}
           icon={<Zap size={14} />}
-          label="Success (High)"
+          label="Success (Unstable)"
           className="bg-yellow-900/60 text-yellow-300 hover:bg-yellow-800/60"
+        />
+        <ActionButton
+          onClick={() => append([makeSuccess('bad', thresholds)])}
+          icon={<Zap size={14} />}
+          label="Success (Bad)"
+          className="bg-red-900/30 text-red-300 hover:bg-red-800/40"
         />
         <ActionButton
           onClick={() => append([makeTimeout()])}
@@ -124,27 +139,45 @@ export function ScenarioEditor({ events, onChange }: Props) {
           label="Timeout"
           className="bg-red-900/60 text-red-300 hover:bg-red-800/60"
         />
+        <ActionButton
+          onClick={() => append([makeDisconnect()])}
+          icon={<WifiOff size={14} />}
+          label="Disconnect"
+          className="bg-orange-900/60 text-orange-300 hover:bg-orange-800/60"
+        />
       </div>
 
       {/* Bulk actions */}
       <div className="flex flex-wrap gap-2">
         <span className="self-center text-xs text-gray-500">Bulk:</span>
         <ActionButton
-          onClick={() => append(makeBulk('timeout', 5))}
-          icon={<Clock size={13} />}
-          label="5× Timeout"
-          className="bg-gray-700 text-gray-300 hover:bg-gray-600"
-        />
-        <ActionButton
-          onClick={() => append(makeBulk('success', 10))}
+          onClick={() => append(makeBulk('success', 10, thresholds))}
           icon={<CheckCircle size={13} />}
           label="10× Success"
           className="bg-gray-700 text-gray-300 hover:bg-gray-600"
         />
         <ActionButton
-          onClick={() => append(makeBulk('highLatency', 5))}
+          onClick={() => append(makeBulk('unstable', 5, thresholds))}
           icon={<Zap size={13} />}
-          label="5× High Latency"
+          label="5× Unstable"
+          className="bg-gray-700 text-gray-300 hover:bg-gray-600"
+        />
+        <ActionButton
+          onClick={() => append(makeBulk('bad', 5, thresholds))}
+          icon={<Zap size={13} />}
+          label="5× Bad"
+          className="bg-gray-700 text-gray-300 hover:bg-gray-600"
+        />
+        <ActionButton
+          onClick={() => append(makeBulk('timeout', 5, thresholds))}
+          icon={<Clock size={13} />}
+          label="5× Timeout"
+          className="bg-gray-700 text-gray-300 hover:bg-gray-600"
+        />
+        <ActionButton
+          onClick={() => append(makeBulk('disconnect', 5, thresholds))}
+          icon={<WifiOff size={13} />}
+          label="5× Disconnect"
           className="bg-gray-700 text-gray-300 hover:bg-gray-600"
         />
         {events.length > 0 && (

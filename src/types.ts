@@ -1,4 +1,4 @@
-export type EventType = 'SUCCESS' | 'TIMEOUT';
+export type EventType = 'SUCCESS' | 'TIMEOUT' | 'DISCONNECT';
 
 export type Status = 'Good' | 'Unstable' | 'Bad';
 
@@ -25,7 +25,8 @@ export interface EvalResult {
   status: Status;
   windowEvents: ResponseEvent[];
   timeoutCount: number;
-  timeoutRate: number;
+  disconnectCount: number;
+  failureRate: number;   // (TIMEOUT + DISCONNECT) / M * 100
   score: number | null;
   reason: string;
 }

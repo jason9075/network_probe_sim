@@ -2,12 +2,11 @@ import type { Config, EvalResult, ResponseEvent } from './types';
 
 /**
  * Evaluates the network status for a given sliding window of events.
- * Priority: timeout hard-override > latency score mapping.
+ * Priority: failure hard-override (TIMEOUT + DISCONNECT) > latency score mapping.
  */
 export function evaluateStatus(window: ResponseEvent[], config: Config): EvalResult {
   const { windowSize, timeoutThreshold, scoreThresholds } = config;
 
-  // Use the last M events (or fewer if partial window)
   const windowEvents = window.slice(-windowSize);
   const effectiveSize = windowEvents.length;
 
@@ -16,25 +15,31 @@ export function evaluateStatus(window: ResponseEvent[], config: Config): EvalRes
       status: 'Good',
       windowEvents: [],
       timeoutCount: 0,
-      timeoutRate: 0,
+      disconnectCount: 0,
+      failureRate: 0,
       score: null,
       reason: 'No events in window',
     };
   }
 
   const timeoutCount = windowEvents.filter((e) => e.type === 'TIMEOUT').length;
-  // Rate compared against full M, not effectiveSize (partial window is lenient)
-  const timeoutRate = (timeoutCount / windowSize) * 100;
+  const disconnectCount = windowEvents.filter((e) => e.type === 'DISCONNECT').length;
+  // Rate compared against full M (partial window is lenient)
+  const failureRate = ((timeoutCount + disconnectCount) / windowSize) * 100;
 
-  // Hard override: timeout rate >= P%
-  if (timeoutRate >= timeoutThreshold) {
+  // Hard override: combined failure rate >= P%
+  if (failureRate >= timeoutThreshold) {
+    const parts = [];
+    if (timeoutCount > 0) parts.push(`${timeoutCount} timeout`);
+    if (disconnectCount > 0) parts.push(`${disconnectCount} disconnect`);
     return {
       status: 'Bad',
       windowEvents,
       timeoutCount,
-      timeoutRate,
+      disconnectCount,
+      failureRate,
       score: null,
-      reason: `Timeout rate ${timeoutRate.toFixed(1)}% ≥ ${timeoutThreshold}% threshold`,
+      reason: `Failure rate ${failureRate.toFixed(1)}% ≥ ${timeoutThreshold}% (${parts.join(', ')})`,
     };
   }
 
@@ -46,7 +51,8 @@ export function evaluateStatus(window: ResponseEvent[], config: Config): EvalRes
       status: 'Good',
       windowEvents,
       timeoutCount,
-      timeoutRate,
+      disconnectCount,
+      failureRate,
       score,
       reason: `Avg latency ${score.toFixed(0)}ms < ${scoreThresholds.good}ms (Good)`,
     };
@@ -57,7 +63,8 @@ export function evaluateStatus(window: ResponseEvent[], config: Config): EvalRes
       status: 'Unstable',
       windowEvents,
       timeoutCount,
-      timeoutRate,
+      disconnectCount,
+      failureRate,
       score,
       reason: `Avg latency ${score.toFixed(0)}ms in [${scoreThresholds.good}, ${scoreThresholds.bad})ms (Unstable)`,
     };
@@ -67,16 +74,13 @@ export function evaluateStatus(window: ResponseEvent[], config: Config): EvalRes
     status: 'Bad',
     windowEvents,
     timeoutCount,
-    timeoutRate,
+    disconnectCount,
+    failureRate,
     score,
     reason: `Avg latency ${score.toFixed(0)}ms ≥ ${scoreThresholds.bad}ms (Bad)`,
   };
 }
 
-/**
- * Computes per-event evaluation across the entire event sequence.
- * Each event is evaluated using the window ending at that event (inclusive).
- */
 export function evaluateSequence(events: ResponseEvent[], config: Config): EvalResult[] {
   return events.map((_, i) => evaluateStatus(events.slice(0, i + 1), config));
 }
