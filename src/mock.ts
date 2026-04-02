@@ -69,6 +69,57 @@ export function makeEvent(type: EventType, thresholds: ScoreThresholds, latency?
   };
 }
 
+export interface Preset {
+  id: string;
+  name: string;
+  build: (t: ScoreThresholds) => ResponseEvent[];
+}
+
+export const PRESETS: Preset[] = [
+  {
+    id: 'timeout-storm',
+    name: 'Timeout Storm',
+    build: (t) => [
+      ...Array.from({ length: 10 }, () => makeSuccess('good', t)),
+      makeTimeout(), makeTimeout(), makeTimeout(),
+      ...Array.from({ length: 10 }, () => makeSuccess('good', t)),
+    ],
+  },
+  {
+    id: 'disconnect-storm',
+    name: 'Disconnect Wave',
+    build: (t) => [
+      ...Array.from({ length: 10 }, () => makeSuccess('good', t)),
+      makeDisconnect(), makeDisconnect(), makeDisconnect(),
+      ...Array.from({ length: 10 }, () => makeSuccess('good', t)),
+    ],
+  },
+  {
+    id: 'scattered-degradation',
+    name: 'Scattered Degradation',
+    build: (t) => [
+      ...Array.from({ length: 8 }, () => makeSuccess('good', t)),
+      makeSuccess('unstable', t),
+      makeSuccess('bad', t),
+      makeSuccess('unstable', t),
+      makeSuccess('bad', t),
+      makeSuccess('unstable', t),
+      makeSuccess('bad', t),
+      makeSuccess('unstable', t),
+      makeSuccess('bad', t),
+      ...Array.from({ length: 8 }, () => makeSuccess('good', t)),
+    ],
+  },
+  {
+    id: 'reconnect-after-outage',
+    name: 'Reconnect After Outage',
+    build: (t) => [
+      ...Array.from({ length: 10 }, () => makeDisconnect()),
+      ...Array.from({ length: 20 }, () => makeSuccess('good', t)),
+    ],
+  },
+];
+
 export function makeBulk(
   type: 'timeout' | 'disconnect' | 'success' | 'unstable' | 'bad',
   count: number,

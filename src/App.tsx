@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Activity } from 'lucide-react';
 import type { Config, ResponseEvent } from './types';
 import { evaluateSequence } from './logic';
@@ -7,15 +7,40 @@ import { ScenarioEditor } from './components/ScenarioEditor';
 import { StatusRibbon } from './components/StatusRibbon';
 
 const DEFAULT_CONFIG: Config = {
-  windowSize: 10,
-  timeoutThreshold: 30,
+  windowSize: 5,
+  timeoutThreshold: 40,
   scoreThresholds: { good: 2000, bad: 3000 },
   interval: 5,
 };
 
+const STORAGE_KEY = 'nps:events';
+
+function loadEvents(): ResponseEvent[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as ResponseEvent[]) : [];
+  } catch {
+    return [];
+  }
+}
+
 export default function App() {
-  const [events, setEvents] = useState<ResponseEvent[]>([]);
+  const [events, setEventsState] = useState<ResponseEvent[]>(loadEvents);
   const [config, setConfig] = useState<Config>(DEFAULT_CONFIG);
+
+  const setEvents = (next: ResponseEvent[]) => {
+    setEventsState(next);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+  };
+
+  // Sync on mount in case another tab changed storage
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === STORAGE_KEY) setEventsState(loadEvents());
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
 
   const results = useMemo(() => evaluateSequence(events, config), [events, config]);
 

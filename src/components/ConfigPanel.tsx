@@ -189,7 +189,7 @@ export function ConfigPanel({ config, onChange }: Props) {
           onChange={(v) => set({ windowSize: v })}
         />
         <SliderRow
-          label="Timeout Threshold (P)"
+          label="Failure Threshold (P)"
           value={config.timeoutThreshold}
           min={1}
           max={100}
@@ -216,7 +216,7 @@ export function ConfigPanel({ config, onChange }: Props) {
         <p className="mb-1 font-medium text-gray-300">Evaluation Logic</p>
         <ol className="list-inside list-decimal space-y-1">
           <li>
-            (TIMEOUT + DISCONNECT) / M ≥ {config.timeoutThreshold}% → <span className="text-red-400">Bad</span>
+            (TIMEOUT + DISCONNECT) / M ≥ {config.timeoutThreshold}% → <span className="text-red-400">Bad</span> (Failure Threshold)
           </li>
           <li>
             Avg &lt; {config.scoreThresholds.good}ms →{' '}

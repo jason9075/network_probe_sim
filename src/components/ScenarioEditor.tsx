@@ -1,6 +1,6 @@
 import { CheckCircle, Clock, Trash2, WifiOff, Zap } from 'lucide-react';
 import type { ResponseEvent, ScoreThresholds } from '../types';
-import { makeBulk, makeDisconnect, makeSuccess, makeTimeout } from '../mock';
+import { makeBulk, makeDisconnect, makeSuccess, makeTimeout, PRESETS } from '../mock';
 
 interface Props {
   events: ResponseEvent[];
@@ -111,8 +111,28 @@ export function ScenarioEditor({ events, onChange, thresholds }: Props) {
       }),
     );
 
+  const applyPreset = (id: string) => {
+    const preset = PRESETS.find((p) => p.id === id);
+    if (preset) onChange(preset.build(thresholds));
+  };
+
   return (
     <div className="flex flex-col gap-4">
+      {/* Preset selector */}
+      <div className="flex items-center justify-end gap-2">
+        <span className="text-xs text-gray-500">Preset:</span>
+        <select
+          defaultValue=""
+          onChange={(e) => { applyPreset(e.target.value); e.target.value = ''; }}
+          className="rounded-lg bg-gray-700 px-3 py-1.5 text-sm text-gray-200 outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+        >
+          <option value="" disabled>Select scenario…</option>
+          {PRESETS.map((p) => (
+            <option key={p.id} value={p.id}>{p.name}</option>
+          ))}
+        </select>
+      </div>
+
       {/* Action bar */}
       <div className="flex flex-wrap gap-2">
         <ActionButton
