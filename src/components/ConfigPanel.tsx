@@ -59,6 +59,20 @@ export function ConfigPanel({ config, onChange }: Props) {
 
       <section className="flex flex-col gap-4">
         <h3 className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+          Timing
+        </h3>
+        <SliderRow
+          label="Probe Interval (N)"
+          value={config.interval}
+          min={1}
+          max={60}
+          unit="s"
+          onChange={(v) => set({ interval: v })}
+        />
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <h3 className="text-xs font-semibold uppercase tracking-widest text-gray-400">
           Window
         </h3>
         <SliderRow

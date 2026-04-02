@@ -18,6 +18,7 @@ export interface Config {
   windowSize: number;          // M
   timeoutThreshold: number;    // P (0–100)
   scoreThresholds: ScoreThresholds;
+  interval: number;            // N (seconds between requests)
 }
 
 export interface EvalResult {

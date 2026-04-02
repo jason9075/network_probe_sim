@@ -10,6 +10,7 @@ const DEFAULT_CONFIG: Config = {
   windowSize: 15,
   timeoutThreshold: 30,
   scoreThresholds: { good: 120, bad: 300 },
+  interval: 5,
 };
 
 export default function App() {
@@ -50,7 +51,7 @@ export default function App() {
             <h2 className="mb-4 text-sm font-semibold uppercase tracking-widest text-gray-400">
               Status Ribbon
             </h2>
-            <StatusRibbon results={results} />
+            <StatusRibbon results={results} interval={config.interval} />
           </section>
 
           {/* Scenario Editor */}
